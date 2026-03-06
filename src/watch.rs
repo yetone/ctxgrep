@@ -1,6 +1,6 @@
 use anyhow::Result;
 use notify::{Event, RecursiveMode, Watcher};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 
 use crate::config::Config;
