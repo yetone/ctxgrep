@@ -1,0 +1,38 @@
+[package]
+name = "ctxgrep"
+version = "0.1.0"
+edition = "2021"
+description = "grep for context, not just text"
+license = "MIT"
+repository = "https://github.com/yetone/ctxgrep"
+readme = "README.md"
+keywords = ["search", "context", "memory", "retrieval", "cli"]
+categories = ["command-line-utilities", "text-processing"]
+
+[[bin]]
+name = "ctxgrep"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+colored = "2"
+dirs = "5"
+ignore = "0.4"
+notify = "7"
+regex = "1"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+toml = "0.8"
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
