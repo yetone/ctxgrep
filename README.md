@@ -4,6 +4,16 @@ grep for context, not just text.
 
 ctxgrep is a local-first CLI for searching documents, notes, memories, and project context. It combines exact search, regex, semantic retrieval, and memory extraction to help humans and AI agents pull the right context into the current task.
 
+## One-Click Setup for AI Agents
+
+Install ctxgrep and its Agent skill in one command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yetone/ctxgrep/main/install.sh | bash && claude skill add --url https://github.com/yetone/ctxgrep/raw/main/skill/ctxgrep.skill
+```
+
+No API key needed — works out of the box with a local embedding model.
+
 ## Features
 
 - **grep-like CLI** — familiar command-line interface
@@ -47,7 +57,7 @@ ctxgrep index ~/notes ~/docs ~/meetings --recursive
 # Exact search
 ctxgrep search --exact "Lossless Feedback Loop"
 
-# Semantic search (requires OPENAI_API_KEY)
+# Semantic search (local model, no API key needed)
 ctxgrep search --semantic "how did we define serious coding"
 
 # Hybrid search (default, combines lexical + semantic)
@@ -137,9 +147,9 @@ max_file_size = "5MB"
 default_extensions = ["md", "txt", "org", "rst", "jsonl", "json", "py", "ts", "js", "go", "rs", "lua"]
 
 [embedding]
-provider = "openai"           # "openai" or "none"
-model = "text-embedding-3-small"
-dimensions = 1536
+provider = "local"            # "local", "openai", or "none"
+model = "all-minilm-l6-v2"   # local ONNX model, auto-downloaded
+dimensions = 384
 
 [retrieval]
 default_mode = "hybrid"
@@ -163,11 +173,9 @@ include_snippets = true
 
 ## Semantic Search
 
-Semantic search requires an embedding provider. Currently supported:
+Semantic search uses a local embedding model by default (`all-minilm-l6-v2`, ~86MB ONNX). The model auto-downloads on first run — no API key needed.
 
-- **OpenAI** — set `OPENAI_API_KEY` environment variable
-
-Without an API key, ctxgrep still works with exact, regex, and lexical search.
+Alternatively, set `provider = "openai"` in config and export `OPENAI_API_KEY` to use OpenAI embeddings.
 
 ## Memory Types
 
