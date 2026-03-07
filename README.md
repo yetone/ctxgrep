@@ -9,7 +9,7 @@ ctxgrep is a local-first CLI for searching documents, notes, memories, and proje
 Paste the following into your coding agent (Claude Code, Cursor, Windsurf, etc.):
 
 ```
-Use ctxgrep to search docs, recall past decisions, and pack context.
+Use ctxgrep for local semantic search, hybrid retrieval, and memory extraction across my docs and notes.
 The ctxgrep skill is at https://github.com/yetone/ctxgrep/tree/main/skill
 ```
 
