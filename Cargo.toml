@@ -31,6 +31,11 @@ sha2 = "0.10"
 tokio = { version = "1", features = ["full"] }
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
+openssl = { version = "0.10", features = ["vendored"], optional = true }
+
+[features]
+default = []
+vendored-openssl = ["openssl"]
 
 [profile.release]
 opt-level = 3
