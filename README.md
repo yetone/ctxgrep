@@ -4,15 +4,26 @@ grep for context, not just text.
 
 ctxgrep is a local-first CLI for searching documents, notes, memories, and project context. It combines exact search, regex, semantic retrieval, and memory extraction to help humans and AI agents pull the right context into the current task.
 
-## One-Click Setup for AI Agents
+## Give Your AI Agent Long-Term Memory
 
-Install ctxgrep and its Agent skill in one command:
+Paste the following into Claude Code or any coding agent that supports tool use:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/yetone/ctxgrep/main/install.sh | bash && claude skill add --url https://github.com/yetone/ctxgrep/raw/main/skill/ctxgrep.skill
+```
+Install ctxgrep (a local-first context & memory retrieval CLI) and add its
+agent skill so you can search my docs, recall past decisions, and pack context:
+
+curl -fsSL https://raw.githubusercontent.com/yetone/ctxgrep/main/install.sh | bash
+
+Then install the skill:
+claude skill add --url https://github.com/yetone/ctxgrep/raw/main/skill/ctxgrep.skill
+
+After that, index my project docs:
+ctxgrep index ~/notes ~/docs --recursive
+
+No API key needed — it ships with a local embedding model.
 ```
 
-No API key needed — works out of the box with a local embedding model.
+That's it. Your agent can now `ctxgrep search`, `ctxgrep memory`, and `ctxgrep pack` to pull relevant context into any task.
 
 ## Features
 
