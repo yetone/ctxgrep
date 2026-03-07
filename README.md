@@ -4,16 +4,33 @@ grep for context, not just text.
 
 ctxgrep is a local-first CLI for searching documents, notes, memories, and project context. It combines exact search, regex, semantic retrieval, and memory extraction to help humans and AI agents pull the right context into the current task.
 
-## Give Your AI Agent Long-Term Memory
+## Quick setup — tell your agent about ctxgrep
 
-Paste the following into your coding agent (Claude Code, Cursor, Windsurf, etc.):
+Copy the block below and paste it into your Claude Code, Cursor, Windsurf, or similar agent harness. It will install ctxgrep, read the skill reference, and know how to use it for all future context retrieval tasks.
 
+```text
+I want you to use ctxgrep for local semantic search, hybrid retrieval, and
+memory extraction across my documents and notes. Please do the following:
+
+1. Install ctxgrep (if not already installed):
+   curl -fsSL https://raw.githubusercontent.com/yetone/ctxgrep/main/install.sh | bash
+
+   Or from source:
+   cargo install --git https://github.com/yetone/ctxgrep
+
+2. Read the ctxgrep skill reference so you know every command, flag, and
+   workflow pattern:
+   https://raw.githubusercontent.com/yetone/ctxgrep/main/skills/ctxgrep/SKILL.md
+
+From now on, when you need to search documents, recall past decisions, or
+assemble context for a task, use ctxgrep instead of manually grepping files.
+For example:
+  ctxgrep search --json "authentication design"
+  ctxgrep memory --json --type decision "database schema"
+  ctxgrep pack --json --budget 5000 "prepare context for the auth refactor"
 ```
-Use ctxgrep for local semantic search, hybrid retrieval, and memory extraction across my docs and notes.
-The ctxgrep skill is at https://github.com/yetone/ctxgrep/tree/main/skill
-```
 
-> **Note:** The ctxgrep binary must be installed first — see [Installation](#installation) below. No API key needed — it ships with a local embedding model.
+No API key needed — ctxgrep ships with a local embedding model that auto-downloads on first run.
 
 ## Features
 
