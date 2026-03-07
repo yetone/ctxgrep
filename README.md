@@ -11,7 +11,7 @@ Paste the following into your coding agent (Claude Code, Cursor, Windsurf, etc.)
 ```
 Use ctxgrep to search docs, recall past decisions, and pack context.
 Download and install the ctxgrep skill from here:
-https://github.com/yetone/ctxgrep/raw/main/skill/ctxgrep.skill
+https://github.com/yetone/ctxgrep/tree/main/skill
 ```
 
 > **Note:** The ctxgrep binary must be installed first — see [Installation](#installation) below. No API key needed — it ships with a local embedding model.
