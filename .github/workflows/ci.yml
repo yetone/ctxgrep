@@ -42,6 +42,16 @@ jobs:
           components: clippy
       - run: cargo clippy -- -D warnings
 
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build release binary
+        run: cargo build --release
+      - name: Run integration tests
+        run: CTXGREP=./target/release/ctxgrep bash tests/integration.sh
+
   build:
     strategy:
       matrix:
