@@ -33,6 +33,12 @@ detect_platform() {
             ;;
     esac
 
+    # x86_64-apple-darwin is not supported (no ONNX Runtime prebuilt binary)
+    if [ "$arch" = "x86_64" ] && [ "$os" = "apple-darwin" ]; then
+        echo "Error: x86_64 macOS is not supported. Please use an Apple Silicon Mac."
+        exit 1
+    fi
+
     echo "${arch}-${os}"
 }
 

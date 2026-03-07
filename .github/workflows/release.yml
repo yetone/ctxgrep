@@ -14,6 +14,7 @@ env:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
@@ -22,9 +23,6 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             name: ctxgrep-aarch64-unknown-linux-gnu
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            name: ctxgrep-x86_64-apple-darwin
           - target: aarch64-apple-darwin
             os: macos-latest
             name: ctxgrep-aarch64-apple-darwin
