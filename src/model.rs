@@ -220,8 +220,12 @@ pub enum SearchMode {
 pub struct SearchOptions {
     pub mode: SearchMode,
     pub top_k: usize,
+    /// Glob pattern filter (e.g. "*.md")
     pub path_filter: Option<String>,
     pub tag_filter: Option<String>,
     pub after: Option<String>,
     pub before: Option<String>,
+    /// Directory-prefix scoping: only return results whose path starts with
+    /// one of these prefixes (absolute paths).  Empty means no prefix filter.
+    pub path_prefixes: Vec<String>,
 }

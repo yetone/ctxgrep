@@ -14,18 +14,79 @@ pub async fn search(
     opts: &SearchOptions,
     config: &Config,
 ) -> Result<Vec<SearchResult>> {
-    match opts.mode {
-        SearchMode::Exact => search_exact(db, query, opts),
-        SearchMode::Regex => search_regex(db, query, opts),
-        SearchMode::Semantic => search_semantic(db, embedder, query, opts).await,
-        SearchMode::Hybrid => search_hybrid(db, embedder, query, opts, config).await,
+    let mut results = match opts.mode {
+        SearchMode::Exact => search_exact(db, query, opts)?,
+        SearchMode::Regex => search_regex(db, query, opts)?,
+        SearchMode::Semantic => search_semantic(db, embedder, query, opts).await?,
+        SearchMode::Hybrid => search_hybrid(db, embedder, query, opts, config).await?,
+    };
+
+    // Apply directory-prefix scoping and glob filtering as a post-processing
+    // step so that all search modes benefit uniformly.
+    filter_by_path(&mut results, opts);
+
+    results.truncate(opts.top_k);
+    Ok(results)
+}
+
+// ── Path filtering ──
+
+/// Keep only results that match every active path constraint:
+/// - `opts.path_prefixes`: result path must start with at least one prefix
+///   (empty list = no prefix filter, i.e. all paths pass).
+/// - `opts.path_filter`: glob pattern applied against the path.
+fn filter_by_path(results: &mut Vec<SearchResult>, opts: &SearchOptions) {
+    if opts.path_prefixes.is_empty() && opts.path_filter.is_none() {
+        return;
     }
+
+    let glob = opts
+        .path_filter
+        .as_deref()
+        .and_then(|pat| globset::GlobBuilder::new(pat).build().ok())
+        .map(|g| {
+            let mut gb = globset::GlobSetBuilder::new();
+            gb.add(g);
+            gb.build().ok()
+        })
+        .flatten();
+
+    // Pre-compute "<prefix>/" and "<prefix>\" strings once to avoid per-result
+    // allocations inside the hot retain loop.
+    let prefixes_with_sep: Vec<(&str, String)> = opts
+        .path_prefixes
+        .iter()
+        .map(|p| (p.as_str(), format!("{}/", p)))
+        .collect();
+
+    results.retain(|r| {
+        // Directory-prefix check: path must equal the prefix exactly or be a
+        // descendant (i.e. start with "<prefix>/").
+        if !prefixes_with_sep.is_empty() {
+            let matches_prefix = prefixes_with_sep
+                .iter()
+                .any(|(prefix, prefix_slash)| r.path == *prefix || r.path.starts_with(prefix_slash.as_str()));
+            if !matches_prefix {
+                return false;
+            }
+        }
+
+        // Glob check
+        if let Some(gs) = &glob {
+            if !gs.is_match(&r.path) {
+                return false;
+            }
+        }
+
+        true
+    });
 }
 
 // ── Exact ──
 
 fn search_exact(db: &Database, query: &str, opts: &SearchOptions) -> Result<Vec<SearchResult>> {
-    let chunk_ids = db.search_exact(query, opts.top_k * 3)?;
+    // Fetch more candidates than top_k so path filtering still yields enough results.
+    let chunk_ids = db.search_exact(query, opts.top_k * 10)?;
     let mut results = Vec::new();
     for cid in chunk_ids {
         if let Some(chunk) = db.get_chunk(&cid)? {
@@ -60,7 +121,6 @@ fn search_exact(db: &Database, query: &str, opts: &SearchOptions) -> Result<Vec<
             });
         }
     }
-    results.truncate(opts.top_k);
     Ok(results)
 }
 
@@ -99,7 +159,7 @@ fn search_regex(db: &Database, query: &str, opts: &SearchOptions) -> Result<Vec<
                 });
             }
         }
-        if results.len() >= opts.top_k {
+        if results.len() >= opts.top_k * 10 {
             break;
         }
     }
@@ -128,7 +188,7 @@ async fn search_semantic(
         .collect();
 
     scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-    scored.truncate(opts.top_k);
+    scored.truncate(opts.top_k * 10);
 
     let mut results = Vec::new();
     for (cid, sim) in scored {
@@ -265,7 +325,7 @@ async fn search_hybrid(
 
     // Rerank
     rerank(&mut results, query);
-    results.truncate(opts.top_k);
+    // Truncation is handled by the parent search() function after path filtering is applied.
     Ok(results)
 }
 

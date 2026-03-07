@@ -45,7 +45,7 @@ cargo install --git https://github.com/yetone/ctxgrep
 
 ```bash
 ctxgrep index <paths...> [options]
-ctxgrep search <query> [options]
+ctxgrep search <query> [PATH...] [options]
 ctxgrep memory <query> [options]
 ctxgrep pack <query> [options]
 ctxgrep watch <paths...>
@@ -88,8 +88,12 @@ Behavior:
 Search indexed documents.
 
 ```bash
-ctxgrep search <query> [options]
+ctxgrep search <query> [PATH...] [options]
 ```
+
+Positional arguments:
+
+- `PATH...` (optional): one or more directories or files to search within. Defaults to the current working directory when omitted.
 
 Options:
 
@@ -107,9 +111,13 @@ Options:
 - `--before <date>`: filter results before date
 - `--source <type>`: filter by source type
 - `--budget <tokens>`: token budget limit
+- `--global`: search the entire index across all directories (disables the default CWD scope)
 
 Behavior:
 
+- **Like `grep`, the search scope defaults to the current working directory.** Only documents indexed under that directory are returned.
+- Pass explicit `PATH` arguments to search across specific directories instead.
+- Use `--global` to search the entire index regardless of where you are.
 - Default mode is hybrid, which combines lexical + semantic + recency + importance scoring.
 - Use `--exact` only when you know the precise phrase.
 - Use `--semantic` for conceptual/meaning-based queries.
@@ -227,8 +235,11 @@ ctxgrep status
 # 2. Index if needed (only once per corpus)
 ctxgrep index ~/project-docs --recursive --with-memory
 
-# 3. Search for context
+# 3. Search for context in the current project directory (default CWD scope)
 ctxgrep search --json "authentication design"
+
+# 3b. Search the entire index when project scope is too narrow
+ctxgrep search --json --global "authentication design"
 
 # 4. Recall specific decisions
 ctxgrep memory --json --type decision "authentication"
@@ -239,10 +250,23 @@ ctxgrep pack --json --budget 5000 "implement OAuth2 based on past decisions"
 
 ## Practical workflows
 
-Broad knowledge search:
+Broad knowledge search across entire index:
 
 ```bash
+ctxgrep search --json --global "product positioning history"
+```
+
+Search scoped to the current project directory (default):
+
+```bash
+cd ~/my-project
 ctxgrep search --json "product positioning history"
+```
+
+Search across specific directories:
+
+```bash
+ctxgrep search --json "product positioning history" ~/notes ~/docs
 ```
 
 Recall decisions before making changes:
@@ -258,7 +282,7 @@ Prepare context for a coding task:
 ctxgrep pack --json --budget 8000 "refactor auth middleware based on past discussions"
 ```
 
-Search within a specific path:
+Search within a specific path glob:
 
 ```bash
 ctxgrep search --json --path "docs/api/*" "rate limiting"
@@ -285,3 +309,4 @@ ctxgrep search --json --regex "TODO.*auth"
 5. Use `memory --type decision` to find past architectural/design decisions before proposing changes.
 6. Index with `--with-memory` to enable memory extraction.
 7. Run `ctxgrep doctor` to diagnose issues with the environment or configuration.
+8. Like `grep`, search is scoped to the **current working directory** by default. Use explicit `PATH` arguments or `--global` to broaden the scope.

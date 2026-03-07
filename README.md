@@ -72,14 +72,20 @@ cargo build --release
 # Index your documents
 ctxgrep index ~/notes ~/docs ~/meetings --recursive
 
+# Search in the current directory (default — like grep, scoped to CWD)
+ctxgrep search "product positioning history"
+
+# Search in specific directories
+ctxgrep search "product positioning history" ~/notes ~/docs
+
+# Search the entire index regardless of location
+ctxgrep search --global "product positioning history"
+
 # Exact search
 ctxgrep search --exact "Lossless Feedback Loop"
 
 # Semantic search (local model, no API key needed)
 ctxgrep search --semantic "how did we define serious coding"
-
-# Hybrid search (default, combines lexical + semantic)
-ctxgrep search "product positioning history"
 
 # Search extracted memories
 ctxgrep memory "naming preferences"
@@ -103,7 +109,7 @@ ctxgrep doctor
 | Command | Description |
 |---------|-------------|
 | `ctxgrep index <paths...>` | Build or update index |
-| `ctxgrep search <query>` | Search indexed documents |
+| `ctxgrep search <query> [PATH...]` | Search indexed documents (defaults to CWD) |
 | `ctxgrep memory <query>` | Search extracted memories |
 | `ctxgrep pack <query>` | Pack context for a task |
 | `ctxgrep watch <paths...>` | Watch paths for changes |
@@ -117,6 +123,28 @@ ctxgrep doctor
 - `--regex` — regex pattern match
 - `--semantic` — vector similarity search (requires embedding provider)
 - `--hybrid` — combines lexical + semantic + recency + importance (default)
+
+## Directory Scoping
+
+Like `grep`, `ctxgrep search` is scoped to the **current working directory** by default.
+
+```bash
+# Searches only files indexed under ~/project
+cd ~/project
+ctxgrep search "authentication"
+
+# Explicitly pass one or more directories
+ctxgrep search "authentication" ~/project ~/notes
+
+# Search the entire index across all indexed directories
+ctxgrep search --global "authentication"
+```
+
+| Invocation | Scope |
+|---|---|
+| `ctxgrep search "query"` | Current working directory |
+| `ctxgrep search "query" ./src ~/notes` | Explicit path(s) |
+| `ctxgrep search "query" --global` | Entire index |
 
 ## Output
 

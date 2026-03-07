@@ -13,7 +13,7 @@ mod retrieval;
 mod util;
 mod watch;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use colored::*;
 
@@ -64,6 +64,7 @@ async fn main() -> Result<()> {
 
         Commands::Search {
             query,
+            paths,
             exact,
             regex,
             semantic,
@@ -78,6 +79,7 @@ async fn main() -> Result<()> {
             before,
             source: _,
             budget: _,
+            global,
         } => {
             let mode = if exact {
                 SearchMode::Exact
@@ -88,7 +90,43 @@ async fn main() -> Result<()> {
             } else {
                 SearchMode::Hybrid
             };
-            cmd_search(&query, mode, top_k, json, path, tag, after, before, &cfg).await
+
+            // Resolve path prefixes: explicit paths take priority; otherwise
+            // default to the current working directory unless --global is set.
+            let path_prefixes = if global {
+                vec![]
+            } else if paths.is_empty() {
+                let cwd = std::env::current_dir()
+                    .context("failed to determine current working directory; use --global to search the entire index")?
+                    .to_string_lossy()
+                    .to_string();
+                vec![cwd]
+            } else {
+                paths
+                    .iter()
+                    .map(|p| {
+                        std::path::Path::new(p)
+                            .canonicalize()
+                            .unwrap_or_else(|_| std::path::PathBuf::from(p))
+                            .to_string_lossy()
+                            .to_string()
+                    })
+                    .collect()
+            };
+
+            cmd_search(
+                &query,
+                mode,
+                top_k,
+                json,
+                path_prefixes,
+                path,
+                tag,
+                after,
+                before,
+                &cfg,
+            )
+            .await
         }
 
         Commands::Memory {
@@ -237,6 +275,7 @@ async fn cmd_search(
     mode: SearchMode,
     top_k: usize,
     json: bool,
+    path_prefixes: Vec<String>,
     path_filter: Option<String>,
     tag_filter: Option<String>,
     after: Option<String>,
@@ -258,6 +297,7 @@ async fn cmd_search(
         tag_filter,
         after,
         before,
+        path_prefixes,
     };
 
     let results = retrieval::search(&db, &embedder, query, &opts, config).await?;
@@ -325,6 +365,7 @@ async fn cmd_pack(
         tag_filter: None,
         after: None,
         before: None,
+        path_prefixes: vec![],
     };
 
     let results = retrieval::search(&db, &embedder, query, &opts, config).await?;
