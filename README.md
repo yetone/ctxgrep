@@ -6,24 +6,15 @@ ctxgrep is a local-first CLI for searching documents, notes, memories, and proje
 
 ## Give Your AI Agent Long-Term Memory
 
-Paste the following into Claude Code or any coding agent that supports tool use:
+Paste the following into your coding agent (Claude Code, Cursor, Windsurf, etc.):
 
 ```
-Install ctxgrep (a local-first context & memory retrieval CLI) and add its
-agent skill so you can search my docs, recall past decisions, and pack context:
-
-curl -fsSL https://raw.githubusercontent.com/yetone/ctxgrep/main/install.sh | bash
-
-Then install the skill:
-claude skill add --url https://github.com/yetone/ctxgrep/raw/main/skill/ctxgrep.skill
-
-After that, index my project docs:
-ctxgrep index ~/notes ~/docs --recursive
-
-No API key needed — it ships with a local embedding model.
+Use ctxgrep to search docs, recall past decisions, and pack context.
+Download and install the ctxgrep skill from here:
+https://github.com/yetone/ctxgrep/raw/main/skill/ctxgrep.skill
 ```
 
-That's it. Your agent can now `ctxgrep search`, `ctxgrep memory`, and `ctxgrep pack` to pull relevant context into any task.
+> **Note:** The ctxgrep binary must be installed first — see [Installation](#installation) below. No API key needed — it ships with a local embedding model.
 
 ## Features
 
