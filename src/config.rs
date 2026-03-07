@@ -96,13 +96,13 @@ fn default_extensions() -> Vec<String> {
     .collect()
 }
 fn default_provider() -> String {
-    "openai".into()
+    "local".into()
 }
 fn default_model() -> String {
-    "text-embedding-3-small".into()
+    "all-minilm-l6-v2".into()
 }
 fn default_dimensions() -> usize {
-    1536
+    384
 }
 fn default_mode() -> String {
     "hybrid".into()
