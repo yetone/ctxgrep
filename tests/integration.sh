@@ -11,6 +11,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FIXTURES="$SCRIPT_DIR/fixtures"
 CTXGREP="${CTXGREP:-ctxgrep}"
+# Resolve to an absolute path so cd operations inside tests don't break it.
+if [[ "$CTXGREP" != /* ]]; then
+    if [[ "$CTXGREP" == */* ]]; then
+        # Relative path (e.g. ./target/release/ctxgrep) — make it absolute.
+        CTXGREP="$(cd "$(dirname "$CTXGREP")" && pwd)/$(basename "$CTXGREP")"
+    else
+        # Plain name in PATH — resolve via command -v.
+        CTXGREP="$(command -v "$CTXGREP")"
+    fi
+fi
 
 PASS=0
 FAIL=0
