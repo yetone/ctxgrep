@@ -78,6 +78,7 @@ async fn main() -> Result<()> {
             before,
             source: _,
             budget: _,
+            group,
         } => {
             let mode = if exact {
                 SearchMode::Exact
@@ -88,7 +89,7 @@ async fn main() -> Result<()> {
             } else {
                 SearchMode::Hybrid
             };
-            cmd_search(&query, mode, top_k, json, path, tag, after, before, &cfg).await
+            cmd_search(&query, mode, top_k, json, group, path, tag, after, before, &cfg).await
         }
 
         Commands::Memory {
@@ -237,6 +238,7 @@ async fn cmd_search(
     mode: SearchMode,
     top_k: usize,
     json: bool,
+    group: bool,
     path_filter: Option<String>,
     tag_filter: Option<String>,
     after: Option<String>,
@@ -270,7 +272,13 @@ async fn cmd_search(
     };
 
     if json {
-        output::print_search_results_json(&results, query, mode_str);
+        if group {
+            output::print_search_results_grouped_json(&results, query, mode_str);
+        } else {
+            output::print_search_results_json(&results, query, mode_str);
+        }
+    } else if group {
+        output::print_search_results_grouped(&results);
     } else {
         output::print_search_results(&results);
     }

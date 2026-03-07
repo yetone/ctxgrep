@@ -1,4 +1,5 @@
 use colored::*;
+use std::collections::HashMap;
 
 use crate::model::*;
 use crate::util;
@@ -45,11 +46,104 @@ pub fn print_search_results(results: &[SearchResult]) {
     }
 }
 
+pub fn print_search_results_grouped(results: &[SearchResult]) {
+    if results.is_empty() {
+        eprintln!("No results found.");
+        return;
+    }
+
+    // Preserve the order in which each file first appears in the results.
+    let mut order: Vec<&str> = Vec::new();
+    let mut groups: HashMap<&str, Vec<&SearchResult>> = HashMap::new();
+    for r in results {
+        let path = r.path.as_str();
+        if !groups.contains_key(path) {
+            order.push(path);
+        }
+        groups.entry(path).or_default().push(r);
+    }
+
+    for (i, path) in order.iter().enumerate() {
+        if i > 0 {
+            println!();
+        }
+
+        // File header
+        let header = format!("── {} ──", path);
+        println!("{}", header.cyan().bold());
+
+        let file_results = &groups[path];
+        for r in file_results {
+            println!();
+
+            // Location + score (indented)
+            let location = if r.start_line > 0 {
+                format!("lines {}-{}", r.start_line, r.end_line)
+            } else {
+                String::new()
+            };
+            let score_str = format!("[score={:.2}]", r.score);
+            if location.is_empty() {
+                println!("  {}", score_str.yellow());
+            } else {
+                println!("  {}  {}", location.bold(), score_str.yellow());
+            }
+
+            // Title
+            if let Some(t) = &r.title {
+                println!("    {}", t.white().bold());
+            }
+
+            // Snippet
+            let snippet = util::truncate(&r.snippet, 300);
+            for line in snippet.lines() {
+                println!("    {}", line.dimmed());
+            }
+
+            // Why
+            if !r.why.is_empty() {
+                let why_str = r.why.join(", ");
+                println!("    {} {}", "why:".green(), why_str);
+            }
+        }
+    }
+}
+
 pub fn print_search_results_json(results: &[SearchResult], query: &str, mode: &str) {
     let output = serde_json::json!({
         "query": query,
         "mode": mode,
         "results": results,
+    });
+    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+}
+
+pub fn print_search_results_grouped_json(results: &[SearchResult], query: &str, mode: &str) {
+    // Preserve the order in which each file first appears in the results.
+    let mut order: Vec<&str> = Vec::new();
+    let mut groups: HashMap<&str, Vec<&SearchResult>> = HashMap::new();
+    for r in results {
+        let path = r.path.as_str();
+        if !groups.contains_key(path) {
+            order.push(path);
+        }
+        groups.entry(path).or_default().push(r);
+    }
+
+    let grouped: Vec<serde_json::Value> = order
+        .iter()
+        .map(|path| {
+            serde_json::json!({
+                "path": path,
+                "results": groups[path],
+            })
+        })
+        .collect();
+
+    let output = serde_json::json!({
+        "query": query,
+        "mode": mode,
+        "groups": grouped,
     });
     println!("{}", serde_json::to_string_pretty(&output).unwrap());
 }

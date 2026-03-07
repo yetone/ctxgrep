@@ -116,6 +116,10 @@ pub enum Commands {
         /// Token budget limit
         #[arg(long)]
         budget: Option<usize>,
+
+        /// Group results by file
+        #[arg(long)]
+        group: bool,
     },
 
     /// Search extracted memories
