@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 // ── Embedder ──
 
 pub enum Embedder {
-    Local(LocalEmbedder),
+    Local(Box<LocalEmbedder>),
     OpenAI(OpenAIEmbedder),
     None,
 }
@@ -16,7 +16,7 @@ impl Embedder {
             "local" => {
                 let cache_dir = crate::config::ctxgrep_dir().join("cache");
                 match LocalEmbedder::new(model, Some(&cache_dir.to_string_lossy())) {
-                    Ok(e) => Embedder::Local(e),
+                    Ok(e) => Embedder::Local(Box::new(e)),
                     Err(e) => {
                         eprintln!("Warning: failed to initialize local embedder: {e}");
                         eprintln!("Semantic search disabled. Try: ctxgrep doctor");
@@ -38,7 +38,9 @@ impl Embedder {
             }
             "none" => Embedder::None,
             _ => {
-                eprintln!("Warning: unknown embedding provider '{provider}', semantic search disabled");
+                eprintln!(
+                    "Warning: unknown embedding provider '{provider}', semantic search disabled"
+                );
                 Embedder::None
             }
         }
@@ -96,7 +98,6 @@ struct ModelMeta {
     pooling: fastembed::Pooling,
 }
 
-
 const TOKENIZER_FILES: &[&str] = &[
     "tokenizer.json",
     "config.json",
@@ -144,7 +145,15 @@ fn model_cache_dir(cache_dir: &Path, repo: &str) -> PathBuf {
 }
 
 fn all_files_cached(dir: &Path, meta: &ModelMeta) -> bool {
-    if !dir.join(meta.model_file.rsplit('/').next().unwrap_or(meta.model_file)).exists() {
+    if !dir
+        .join(
+            meta.model_file
+                .rsplit('/')
+                .next()
+                .unwrap_or(meta.model_file),
+        )
+        .exists()
+    {
         return false;
     }
     for f in TOKENIZER_FILES {
@@ -159,8 +168,8 @@ fn download_model_files(cache_dir: &Path, meta: &ModelMeta) -> Result<()> {
     let dir = model_cache_dir(cache_dir, meta.repo);
     std::fs::create_dir_all(&dir)?;
 
-    let endpoint = std::env::var("HF_ENDPOINT")
-        .unwrap_or_else(|_| "https://huggingface.co".to_string());
+    let endpoint =
+        std::env::var("HF_ENDPOINT").unwrap_or_else(|_| "https://huggingface.co".to_string());
 
     let mirror_endpoints = if endpoint == "https://huggingface.co" {
         vec![
@@ -228,7 +237,11 @@ fn download_file_blocking(url: &str, dest: &Path) -> Result<()> {
 
         let bytes = resp.bytes()?;
         std::fs::write(&dest, &bytes)?;
-        eprintln!("  Saved {} ({:.1} MB)", dest.display(), bytes.len() as f64 / 1_048_576.0);
+        eprintln!(
+            "  Saved {} ({:.1} MB)",
+            dest.display(),
+            bytes.len() as f64 / 1_048_576.0
+        );
         Ok(())
     });
 
@@ -239,12 +252,15 @@ fn download_file_blocking(url: &str, dest: &Path) -> Result<()> {
 
 fn load_from_cache(cache_dir: &Path, meta: &ModelMeta) -> Result<fastembed::TextEmbedding> {
     use fastembed::{
-        InitOptionsUserDefined, TextEmbedding, TokenizerFiles,
-        UserDefinedEmbeddingModel,
+        InitOptionsUserDefined, TextEmbedding, TokenizerFiles, UserDefinedEmbeddingModel,
     };
 
     let dir = model_cache_dir(cache_dir, meta.repo);
-    let model_local = meta.model_file.rsplit('/').next().unwrap_or(meta.model_file);
+    let model_local = meta
+        .model_file
+        .rsplit('/')
+        .next()
+        .unwrap_or(meta.model_file);
 
     let onnx_file = std::fs::read(dir.join(model_local))?;
     let tokenizer_files = TokenizerFiles {
