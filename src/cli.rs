@@ -61,6 +61,12 @@ pub enum Commands {
         /// Search query
         query: String,
 
+        /// Paths or directories to search within (defaults to current directory).
+        /// Pass multiple paths to search across several directories at once.
+        /// Use --global to search the entire index regardless of location.
+        #[arg(value_name = "PATH")]
+        paths: Vec<String>,
+
         /// Exact match mode
         #[arg(long)]
         exact: bool,
@@ -93,7 +99,7 @@ pub enum Commands {
         #[arg(long)]
         with_meta: bool,
 
-        /// Filter by path glob
+        /// Filter by path glob (e.g. "*.md")
         #[arg(long)]
         path: Option<String>,
 
@@ -116,6 +122,11 @@ pub enum Commands {
         /// Token budget limit
         #[arg(long)]
         budget: Option<usize>,
+
+        /// Search the entire index across all directories (disables the default
+        /// current-directory scope)
+        #[arg(long)]
+        global: bool,
     },
 
     /// Search extracted memories
